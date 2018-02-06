@@ -1,0 +1,17 @@
+*.class
+.project
+.metadata
+target
+*.iml
+.idea
+
+pom.xml.releaseBackup
+release.properties
+
+# Package Files #
+*.jar
+*.war
+*.ear
+.settings
+.classpath
+.checkstyle
