@@ -35,4 +35,12 @@ public class DeviceKey implements Serializable {
     public void setProduct(String product) {
         this.product = product;
     }
+
+    @Override
+    public String toString() {
+        return String.format(
+                "DeviceKey[vendorId=%d, product='%s']",
+                vendorId, product);
+    }
+
 }

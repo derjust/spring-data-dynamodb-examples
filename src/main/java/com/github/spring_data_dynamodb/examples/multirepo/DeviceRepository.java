@@ -5,9 +5,9 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;
 
-/** The DynamoDB repostiroy */
+/** The DynamoDB repository */
 @EnableScan
-public interface DeviceRepository extends CrudRepository<Device, DeviceKey>, DeviceAdditionRepository {
+public interface DeviceRepository extends CrudRepository<Device, DeviceKey> {
 
     List<Device> findAll();
 

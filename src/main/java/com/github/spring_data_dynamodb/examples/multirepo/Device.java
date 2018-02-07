@@ -72,4 +72,11 @@ public class Device {
     public void setLastChange(Date lastChange) {
         this.lastChange = lastChange;
     }
+
+    @Override
+    public String toString() {
+        return String.format(
+                "Device[id=%s, name='%s', lastChange='%s']",
+                key, name, lastChange);
+    }
 }

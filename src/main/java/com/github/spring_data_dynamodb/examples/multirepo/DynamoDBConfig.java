@@ -30,7 +30,7 @@ public class DynamoDBConfig {
     public AmazonDynamoDB amazonDynamoDB() {
         return AmazonDynamoDBClientBuilder.standard()
                 .withCredentials(amazonAWSCredentialsProvider())
-                .withRegion(Regions.EU_CENTRAL_1)
+                .withRegion(Regions.US_EAST_1)
                 .build();
     }
 }

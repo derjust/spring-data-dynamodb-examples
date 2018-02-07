@@ -1,5 +1,16 @@
 package com.github.spring_data_dynamodb.examples.multirepo;
 
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
+import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
+import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
+import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
+import com.amazonaws.services.dynamodbv2.model.KeyType;
+import com.amazonaws.services.dynamodbv2.model.ListTablesRequest;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
+import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +25,7 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import java.util.Date;
+import java.util.List;
 
 @SpringBootApplication
 @EnableJpaRepositories(
@@ -36,12 +48,59 @@ public class Application {
 	}
 
 	@Bean
-	public CommandLineRunner demo(CustomerRepository jpaRepository, DeviceRepository nosqlRepository) {
+	public CommandLineRunner demo(CustomerRepository jpaRepository, DeviceRepository nosqlRepository, AmazonDynamoDB amazonDynamoDB) {
 		return (args) -> {
 			demoJPA(jpaRepository);
 
+			prepareNoSql(amazonDynamoDB, Device.class);
+
 			demoNoSQL(nosqlRepository);
 		};
+	}
+
+	private boolean dynamoDBTableExists(AmazonDynamoDB amazonDynamoDB, String tableName) {
+		List<String> existingTables = amazonDynamoDB.listTables().getTableNames();
+		if (existingTables.contains(tableName)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	private void waitForDynamoDBTable(AmazonDynamoDB amazonDynamoDB, String tableName, boolean exists) {
+		do {
+			try {
+				Thread.sleep(5 * 1000L);
+			} catch (InterruptedException e) {
+				throw new RuntimeException("Couldn't wait detect table " + tableName);
+			}
+		}
+		while(dynamoDBTableExists(amazonDynamoDB, tableName) != exists);
+	}
+
+	private void prepareNoSql(AmazonDynamoDB amazonDynamoDB, Class<?> entityClass) {
+		String tableName = entityClass.getAnnotation(DynamoDBTable.class).tableName();
+		try {
+			amazonDynamoDB.describeTable(tableName);
+
+			log.info("Table {} found", tableName);
+			return;
+		} catch (ResourceNotFoundException rnfe) {
+			log.warn("Table {} doesn't exist - Creating", tableName);
+		}
+
+		CreateTableRequest ctr = new CreateTableRequest().withTableName(tableName);
+		ctr.withProvisionedThroughput(new ProvisionedThroughput(1L, 1L));
+		ctr.withAttributeDefinitions(
+				new AttributeDefinition().withAttributeName("VendorId").withAttributeType(ScalarAttributeType.N),
+				new AttributeDefinition().withAttributeName("ProductId").withAttributeType(ScalarAttributeType.S));
+
+		ctr.withKeySchema(
+				new KeySchemaElement().withAttributeName("VendorId").withKeyType(KeyType.HASH),
+				new KeySchemaElement().withAttributeName("ProductId").withKeyType(KeyType.RANGE));
+
+		amazonDynamoDB.createTable(ctr);
+		waitForDynamoDBTable(amazonDynamoDB, tableName, true);
 	}
 
 	private void demoNoSQL(DeviceRepository nosqlRepository) {
@@ -58,12 +117,6 @@ public class Application {
         }
 		log.info("");
 
-		// fetch by custom method
-		log.info("Device's product found with fancyCustomMethod(1L, 'Product B'):");
-		log.info("--------------------------------------------");
-		String product = nosqlRepository.fancyCustomMethod(new DeviceKey(1L, "Product B"));
-		log.info(product);
-		log.info("");
 	}
 
 	private void demoJPA(CustomerRepository jpaRepository) {
