@@ -1,13 +1,11 @@
 package com.github.spring_data_dynamodb.examples.multirepo;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
-import com.amazonaws.services.dynamodbv2.model.ListTablesRequest;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
@@ -25,7 +23,6 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import java.util.Date;
-import java.util.List;
 
 @SpringBootApplication
 @EnableJpaRepositories(
@@ -58,16 +55,7 @@ public class Application {
 		};
 	}
 
-	private boolean dynamoDBTableExists(AmazonDynamoDB amazonDynamoDB, String tableName) {
-		List<String> existingTables = amazonDynamoDB.listTables().getTableNames();
-		if (existingTables.contains(tableName)) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	private void waitForDynamoDBTable(AmazonDynamoDB amazonDynamoDB, String tableName, boolean exists) {
+	private void waitForDynamoDBTable(AmazonDynamoDB amazonDynamoDB, String tableName) {
 		do {
 			try {
 				Thread.sleep(5 * 1000L);
@@ -75,7 +63,7 @@ public class Application {
 				throw new RuntimeException("Couldn't wait detect table " + tableName);
 			}
 		}
-		while(dynamoDBTableExists(amazonDynamoDB, tableName) != exists);
+		while (!amazonDynamoDB.describeTable(tableName).getTable().getTableStatus().equals("ACTIVE"));
 	}
 
 	private void prepareNoSql(AmazonDynamoDB amazonDynamoDB, Class<?> entityClass) {
@@ -100,14 +88,14 @@ public class Application {
 				new KeySchemaElement().withAttributeName("ProductId").withKeyType(KeyType.RANGE));
 
 		amazonDynamoDB.createTable(ctr);
-		waitForDynamoDBTable(amazonDynamoDB, tableName, true);
+		waitForDynamoDBTable(amazonDynamoDB, tableName);
 	}
 
 	private void demoNoSQL(DeviceRepository nosqlRepository) {
 		// save a couple of devices
 		nosqlRepository.save(new Device(1L, "Product A", "A", new Date()));
 		nosqlRepository.save(new Device(1L, "Product B", "B", new Date()));
-		nosqlRepository.save(new Device(2L, "Product CB", "C", new Date()));
+		nosqlRepository.save(new Device(2L, "Product C", "C", new Date()));
 
 		// fetch all devices
 		log.info("Devices found with findAll():");
