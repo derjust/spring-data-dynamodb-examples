@@ -3,19 +3,14 @@ package com.github.derjust.spring_data_dynamodb_examples.multirepo;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
-import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
-import com.amazonaws.services.dynamodbv2.model.GlobalSecondaryIndex;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
-import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -24,10 +19,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 
-import static com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig.waitForDynamoDBTable;
+import static com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig.checkOrCreateTable;
 
 @SpringBootApplication
 @EnableJpaRepositories(
@@ -47,55 +41,35 @@ public class Application {
 	private static final Logger log = LoggerFactory.getLogger(Application.class);
 
 	public static void main(String[] args) {
-		SpringApplication.run(Application.class);
+		new SpringApplicationBuilder(Application.class)
+				.profiles("multirepo")
+				.run(args);
 	}
 
 	@Bean
-	public CommandLineRunner multirepo(CustomerRepository jpaRepository, DeviceRepository nosqlRepository, AmazonDynamoDB amazonDynamoDB, DynamoDBMapper dynamoDBMapper, DynamoDBMapperConfig config) {
+	public CommandLineRunner multirepo(ConfigurableApplicationContext ctx, CustomerRepository jpaRepository, DeviceRepository dynamoDBRepository, AmazonDynamoDB amazonDynamoDB, DynamoDBMapper dynamoDBMapper, DynamoDBMapperConfig config) {
 		return (args) -> {
 			demoJPA(jpaRepository);
 
-			prepareNoSql(amazonDynamoDB, dynamoDBMapper, config, Device.class);
+			checkOrCreateTable(amazonDynamoDB, dynamoDBMapper, config, Device.class);
 
-			demoNoSQL(nosqlRepository);
+			demoDynamoDB(dynamoDBRepository);
+
+			ctx.close();
 		};
 	}
 
 
-	private void prepareNoSql(AmazonDynamoDB amazonDynamoDB, DynamoDBMapper mapper, DynamoDBMapperConfig config, Class<?> entityClass) {
-		String tableName = entityClass.getAnnotation(DynamoDBTable.class).tableName();
-		try {
-			amazonDynamoDB.describeTable(tableName);
-
-			log.info("Table {} found", tableName);
-			return;
-		} catch (ResourceNotFoundException rnfe) {
-			log.warn("Table {} doesn't exist - Creating", tableName);
-		}
-
-
-		CreateTableRequest ctr = mapper.generateCreateTableRequest(entityClass, config);
-		ProvisionedThroughput pt = new ProvisionedThroughput(1L, 1L);
-		ctr.withProvisionedThroughput(pt);
-		List<GlobalSecondaryIndex> gsi = ctr.getGlobalSecondaryIndexes();
-		if (gsi != null) {
-			gsi.forEach(aGsi -> aGsi.withProvisionedThroughput(pt));
-		}
-
-		amazonDynamoDB.createTable(ctr);
-		waitForDynamoDBTable(amazonDynamoDB, tableName);
-	}
-
-	private void demoNoSQL(DeviceRepository nosqlRepository) {
+	private void demoDynamoDB(DeviceRepository dynamoDBRepository) {
 		// save a couple of devices
-		nosqlRepository.save(new Device(1L, "Product A", "A", new Date()));
-		nosqlRepository.save(new Device(1L, "Product B", "B", new Date()));
-		nosqlRepository.save(new Device(2L, "Product C", "C", new Date()));
+		dynamoDBRepository.save(new Device(1L, "Product A", "A", new Date()));
+		dynamoDBRepository.save(new Device(1L, "Product B", "B", new Date()));
+		dynamoDBRepository.save(new Device(2L, "Product C", "C", new Date()));
 
 		// fetch all devices
 		log.info("Devices found with findAll():");
 		log.info("-------------------------------");
-		for (Device device : nosqlRepository.findAll()) {
+		for (Device device : dynamoDBRepository.findAll()) {
             log.info(device.toString());
         }
 		log.info("");

@@ -3,39 +3,34 @@ package com.github.derjust.spring_data_dynamodb_examples.custom;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
-import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
-import com.amazonaws.services.dynamodbv2.model.GlobalSecondaryIndex;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
-import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig;
-import com.github.derjust.spring_data_dynamodb_examples.multirepo.CustomerRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
-import static com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig.waitForDynamoDBTable;
+import static com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig.checkOrCreateTable;
 
 @SpringBootApplication
-@EnableJpaRepositories(
-        includeFilters = {@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
-                CustomerRepository.class}
-        )}
-)
+@EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class, //No JPA
+        DataSourceTransactionManagerAutoConfiguration.class,
+        HibernateJpaAutoConfiguration.class})
 @EnableDynamoDBRepositories(
         includeFilters = {@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
                 UserRepository.class}
@@ -48,15 +43,19 @@ public class Application {
     private static final Logger log = LoggerFactory.getLogger(Application.class);
 
     public static void main(String[] args) {
-        SpringApplication.run(Application.class);
+        new SpringApplicationBuilder(Application.class)
+                .profiles("custom")
+                .run(args);
     }
 
     @Bean
-    public CommandLineRunner custom(UserRepository userRepository, AmazonDynamoDB amazonDynamoDB, DynamoDBMapper dynamoDBMapper, DynamoDBMapperConfig config) {
+    public CommandLineRunner custom(ConfigurableApplicationContext ctx, UserRepository userRepository, AmazonDynamoDB amazonDynamoDB, DynamoDBMapper dynamoDBMapper, DynamoDBMapperConfig config) {
         return (args) -> {
-            prepareNoSql(amazonDynamoDB, dynamoDBMapper, config, User.class);
+            checkOrCreateTable(amazonDynamoDB, dynamoDBMapper, config, User.class);
 
             demoCustomInterface(userRepository);
+
+            ctx.close();
         };
     }
 
@@ -93,26 +92,4 @@ public class Application {
         return user;
     }
 
-    private void prepareNoSql(AmazonDynamoDB amazonDynamoDB, DynamoDBMapper mapper, DynamoDBMapperConfig config, Class<?> entityClass) {
-        String tableName = entityClass.getAnnotation(DynamoDBTable.class).tableName();
-        try {
-            amazonDynamoDB.describeTable(tableName);
-
-            log.info("Table {} found", tableName);
-            return;
-        } catch (ResourceNotFoundException rnfe) {
-            log.warn("Table {} doesn't exist - Creating", tableName);
-        }
-
-        CreateTableRequest ctr = mapper.generateCreateTableRequest(entityClass, config);
-        ProvisionedThroughput pt = new ProvisionedThroughput(1L, 1L);
-        ctr.withProvisionedThroughput(pt);
-        List<GlobalSecondaryIndex> gsi = ctr.getGlobalSecondaryIndexes();
-        if (gsi != null) {
-            gsi.forEach(aGsi -> aGsi.withProvisionedThroughput(pt));
-        }
-
-        amazonDynamoDB.createTable(ctr);
-        waitForDynamoDBTable(amazonDynamoDB, tableName);
-    }
 }

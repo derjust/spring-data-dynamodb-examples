@@ -6,7 +6,7 @@
 
     <groupId>com.github.derjust</groupId>
     <artifactId>spring-data-dynamodb-example</artifactId>
-    <version>5.0.2</version>
+    <version>5.0.3-SNAPSHOT</version>
     <name>Spring Data DynamoDB Examples</name>
     <inceptionYear>2018</inceptionYear>
 
@@ -54,15 +54,20 @@
         </dependencies>
     </dependencyManagement>
 
-    <dependencies><!--
+    <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>-->
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-rest-webmvc</artifactId>
         </dependency>
 
         <dependency>
@@ -117,9 +122,6 @@
                         </goals>
                         <configuration>
                             <mainClass>com.github.derjust.spring_data_dynamodb_examples.multirepo.Application</mainClass>
-                            <systemProperties>
-                                <systemProperty><key>spring.profiles.active</key><value>multirep</value></systemProperty>
-                            </systemProperties>
                         </configuration>
                     </execution>
                     <execution>
@@ -129,9 +131,15 @@
                         </goals>
                         <configuration>
                             <mainClass>com.github.derjust.spring_data_dynamodb_examples.custom.Application</mainClass>
-                            <systemProperties>
-                                <systemProperty><key>spring.profiles.active</key><value>custom</value></systemProperty>
-                            </systemProperties>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>rest</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>com.github.derjust.spring_data_dynamodb_examples.rest.Application</mainClass>
                         </configuration>
                     </execution>
                 </executions>

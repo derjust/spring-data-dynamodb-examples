@@ -80,3 +80,28 @@ userRepository.calculateAge(user);
 
 ## 📘 REST integration
 
+This example shows how to use `spring-data-dynamodb` with `spring-data-rest` to automatically expose CRUD operations on DynamoDB entities via REST endpoints.
+
+Further explanation can be found 
+* in the [README-multirepo.md](README-rest.md)
+* as also the [code](src/main/java/com/github/derjust/spring_data_dynamodb_examples/rest)
+
+### 📜 Code sample
+An additional DynamoDB bean must be registered and injected - everything else happens via auto-configuration:
+
+```java
+
+@EnableDynamoDBRepositories(
+		mappingContextRef = "dynamoDBMappingContext",
+		includeFilters = {@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
+				UserRepository.class}
+		)}
+)
+
+
+@Bean
+public DynamoDBMappingContext dynamoDBMappingContext() {
+    return new DynamoDBMappingContext();
+}
+
+```
