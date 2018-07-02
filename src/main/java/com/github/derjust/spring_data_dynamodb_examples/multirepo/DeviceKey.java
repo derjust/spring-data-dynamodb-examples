@@ -1,4 +1,4 @@
-package com.github.spring_data_dynamodb.examples.multirepo;
+package com.github.derjust.spring_data_dynamodb_examples.multirepo;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;

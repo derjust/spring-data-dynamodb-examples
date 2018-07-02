@@ -1,4 +1,4 @@
-package com.github.spring_data_dynamodb.examples.multirepo;
+package com.github.derjust.spring_data_dynamodb_examples.multirepo;
 
 import org.socialsignin.spring.data.dynamodb.repository.EnableScan;
 import org.springframework.data.repository.CrudRepository;

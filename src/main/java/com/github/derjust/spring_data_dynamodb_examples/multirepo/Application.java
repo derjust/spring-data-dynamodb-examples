@@ -1,14 +1,14 @@
-package com.github.spring_data_dynamodb.examples.multirepo;
+package com.github.derjust.spring_data_dynamodb_examples.multirepo;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
-import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.KeyType;
+import com.amazonaws.services.dynamodbv2.model.GlobalSecondaryIndex;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
-import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,9 +20,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+import static com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig.waitForDynamoDBTable;
 
 @SpringBootApplication
 @EnableJpaRepositories(
@@ -36,6 +41,7 @@ import java.util.Date;
 		)}
 )
 @Configuration
+@Import(DynamoDBConfig.class)
 public class Application {
 
 	private static final Logger log = LoggerFactory.getLogger(Application.class);
@@ -45,28 +51,18 @@ public class Application {
 	}
 
 	@Bean
-	public CommandLineRunner demo(CustomerRepository jpaRepository, DeviceRepository nosqlRepository, AmazonDynamoDB amazonDynamoDB) {
+	public CommandLineRunner multirepo(CustomerRepository jpaRepository, DeviceRepository nosqlRepository, AmazonDynamoDB amazonDynamoDB, DynamoDBMapper dynamoDBMapper, DynamoDBMapperConfig config) {
 		return (args) -> {
 			demoJPA(jpaRepository);
 
-			prepareNoSql(amazonDynamoDB, Device.class);
+			prepareNoSql(amazonDynamoDB, dynamoDBMapper, config, Device.class);
 
 			demoNoSQL(nosqlRepository);
 		};
 	}
 
-	private void waitForDynamoDBTable(AmazonDynamoDB amazonDynamoDB, String tableName) {
-		do {
-			try {
-				Thread.sleep(5 * 1000L);
-			} catch (InterruptedException e) {
-				throw new RuntimeException("Couldn't wait detect table " + tableName);
-			}
-		}
-		while (!amazonDynamoDB.describeTable(tableName).getTable().getTableStatus().equals("ACTIVE"));
-	}
 
-	private void prepareNoSql(AmazonDynamoDB amazonDynamoDB, Class<?> entityClass) {
+	private void prepareNoSql(AmazonDynamoDB amazonDynamoDB, DynamoDBMapper mapper, DynamoDBMapperConfig config, Class<?> entityClass) {
 		String tableName = entityClass.getAnnotation(DynamoDBTable.class).tableName();
 		try {
 			amazonDynamoDB.describeTable(tableName);
@@ -77,15 +73,14 @@ public class Application {
 			log.warn("Table {} doesn't exist - Creating", tableName);
 		}
 
-		CreateTableRequest ctr = new CreateTableRequest().withTableName(tableName);
-		ctr.withProvisionedThroughput(new ProvisionedThroughput(1L, 1L));
-		ctr.withAttributeDefinitions(
-				new AttributeDefinition().withAttributeName("VendorId").withAttributeType(ScalarAttributeType.N),
-				new AttributeDefinition().withAttributeName("ProductId").withAttributeType(ScalarAttributeType.S));
 
-		ctr.withKeySchema(
-				new KeySchemaElement().withAttributeName("VendorId").withKeyType(KeyType.HASH),
-				new KeySchemaElement().withAttributeName("ProductId").withKeyType(KeyType.RANGE));
+		CreateTableRequest ctr = mapper.generateCreateTableRequest(entityClass, config);
+		ProvisionedThroughput pt = new ProvisionedThroughput(1L, 1L);
+		ctr.withProvisionedThroughput(pt);
+		List<GlobalSecondaryIndex> gsi = ctr.getGlobalSecondaryIndexes();
+		if (gsi != null) {
+			gsi.forEach(aGsi -> aGsi.withProvisionedThroughput(pt));
+		}
 
 		amazonDynamoDB.createTable(ctr);
 		waitForDynamoDBTable(amazonDynamoDB, tableName);
@@ -124,10 +119,10 @@ public class Application {
 		log.info("");
 
 		// fetch an individual customer by ID
-		Customer customer = jpaRepository.findOne(1L);
+		Optional<Customer> customer = jpaRepository.findById(1L);
 		log.info("Customer found with findOne(1L):");
 		log.info("--------------------------------");
-		log.info(customer.toString());
+		log.info(customer.get().toString());
 		log.info("");
 
 		// fetch customers by last name

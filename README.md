@@ -1,6 +1,8 @@
 # 📚 Spring Data DynamoDB Examples
 
-Examples for Spring-Data-DynamoDB available at (github.com/derjust/spring-data-dynamodb)[https://github.com/derjust/spring-data-dynamodb]
+Examples for Spring-Data-DynamoDB available at [<img width="16" src="https://derjust.github.io/spring-data-dynamodb/banner/spring-data-dynamodb.png" />github.com/derjust/spring-data-dynamodb](https://github.com/derjust/spring-data-dynamodb)
+
+Please also check the [📖 Wiki](https://github.com/derjust/spring-data-dynamodb/wiki)
 
 The following examples exist and how they can be executed
 
@@ -10,8 +12,13 @@ This example shows how to use multiple *Spring Data* repository types to access 
 
 In this example `DynamoDB` and `MySQL` is used.
 
-### Explanation
-The respective repository providers must be informed which interface to take care of. In a `@Configurable` bean the interfaces have to be assigned via `include`/`exclude` filters:
+Further explanation can be found 
+* in the [README-multirepo.md](README-multirepo.md)
+* as also the [code](src/main/java/com/github/derjust/spring_data_dynamodb_examples/multirepo)
+
+### 📜 Code sample
+The respective repository providers must be informed which interface to take care of. 
+In a `@Configurable` bean the interfaces have to be assigned via `include`/`exclude` filters:
 
 ```java
 @SpringBootApplication
@@ -31,52 +38,45 @@ The respective repository providers must be informed which interface to take car
 public class Application {
 ```
 
-### How to prepare:
-* Update `src/main/resources/application.properties`
-
-| Key                          | Sample value                           | Description                                       |
-|------------------------------|----------------------------------------|---------------------------------------------------|
-| `spring.datasource.url`      | `jdbc:mysql://localhost:3306/customer` | MySQL connection url including the database name  |
-| `spring.datasource.username` | `root`                                 | MySQL user with `CREATE`/`INSERT`/`SELECT` grants |
-| `spring.datasource.password` | `root`                                 | MySQL user's password                             |
-| `amazon.aws.accesskey`       | N/A                                    | AWS accesskey for DynamoDB                        |
-| `amazon.aws.secretkey`       | N/A                                    | AWS secretkey for DynamoDB                        |
-
-### How to run: 
-```
-mvn compile exec:java@multirepo
-```
-
-### Output should look like:
-```
-2018-02-06 23:58:18.631  INFO 14962 --- [lication.main()] s.b.c.e.t.TomcatEmbeddedServletContainer : Tomcat started on port(s): 8080 (http)
-2018-02-06 23:58:18.738  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : Customers found with findAll():
-2018-02-06 23:58:18.738  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : -------------------------------
-2018-02-06 23:58:18.757  INFO 14962 --- [lication.main()] o.h.h.i.QueryTranslatorFactoryInitiator  : HHH000397: Using ASTQueryTranslatorFactory
-2018-02-06 23:58:18.910  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : Customer[id=1, firstName='Jack', lastName='Bauer']
-2018-02-06 23:58:18.910  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : Customer[id=2, firstName='Chloe', lastName='O'Brian']
-2018-02-06 23:58:18.910  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : Customer[id=3, firstName='Kim', lastName='Bauer']
-2018-02-06 23:58:18.911  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : Customer[id=4, firstName='David', lastName='Palmer']
-2018-02-06 23:58:18.911  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : Customer[id=5, firstName='Michelle', lastName='Dessler']
-2018-02-06 23:58:18.911  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : 
-2018-02-06 23:58:18.925  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : Customer found with findOne(1L):
-2018-02-06 23:58:18.925  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : --------------------------------
-2018-02-06 23:58:18.925  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : Customer[id=1, firstName='Jack', lastName='Bauer']
-2018-02-06 23:58:18.925  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : 
-2018-02-06 23:58:18.925  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : Customer found with findByLastName('Bauer'):
-2018-02-06 23:58:18.925  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : --------------------------------------------
-2018-02-06 23:58:18.954  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : Customer[id=1, firstName='Jack', lastName='Bauer']
-2018-02-06 23:58:18.954  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : Customer[id=3, firstName='Kim', lastName='Bauer']
-2018-02-06 23:58:18.954  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : 
-2018-02-06 23:58:19.389  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : Table Device found
-2018-02-06 23:58:19.537  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : Devices found with findAll():
-2018-02-06 23:58:19.538  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : -------------------------------
-2018-02-06 23:58:19.573  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : Device[id=DeviceKey[vendorId=2, product='Product CB'], name='C', lastChange='Tue Feb 06 23:58:19 EST 2018']
-2018-02-06 23:58:19.573  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : Device[id=DeviceKey[vendorId=1, product='Product A'], name='A', lastChange='Tue Feb 06 23:58:19 EST 2018']
-2018-02-06 23:58:19.574  INFO 14962 --- [lication.main()] c.g.s.examples.multirepo.Application     : Device[id=DeviceKey[vendorId=1, product='Product B'], name='B', lastChange='Tue Feb 06 23:58:19 EST 2018']
-```
-
 ## 📕 Custom repository methods
+
+This example shows how to use custom methods as part of *Spring Data* repository interfaces to implement custom logic.
+
+Further explanation can be found 
+* in the [README-multirepo.md](README-custom.md)
+* as also the [code](src/main/java/com/github/derjust/spring_data_dynamodb_examples/custom)
+
+
+### 📜 Code sample
+The repository interface is extend by an additional interface. It's implementation is found by the `Impl` suffix in the same package.
+*Spring Data* itself takes care of weaving in the implementation at runtime:
+
+```java
+public interface UserRepository extends CrudRepository<User, Long>, CustomUserRepositoryMethods { }
+
+
+public interface CustomUserRepositoryMethods {
+    User calculateAge(User user);
+}
+
+
+public class CustomUserRepositoryMethodsImpl implements CustomUserRepositoryMethods {
+
+    @Override
+    public User calculateAge(User user) {
+        /* custom code */
+    }
+}
+
+
+
+// Regular method of the repository interface
+User user = userRepository.findOne(id);
+// Custom method available via the interface, too
+userRepository.calculateAge(user);
+
+```
+
 
 ## 📘 REST integration
 
