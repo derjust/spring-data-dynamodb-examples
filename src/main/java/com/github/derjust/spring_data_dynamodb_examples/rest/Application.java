@@ -1,3 +1,18 @@
+/**
+ * Copyright © 2018 spring-data-dynamodb-example (https://github.com/derjust/spring-data-dynamodb-examples)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.github.derjust.spring_data_dynamodb_examples.rest;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -26,15 +41,10 @@ import org.springframework.context.annotation.Import;
 import static com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig.checkOrCreateTable;
 
 @SpringBootApplication
-@EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class, //No JPA
-		DataSourceTransactionManagerAutoConfiguration.class,
-		HibernateJpaAutoConfiguration.class})
-@EnableDynamoDBRepositories(
-		mappingContextRef = "dynamoDBMappingContext",
-		includeFilters = {@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
-				UserRepository.class}
-		)}
-)
+@EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class, // No JPA
+		DataSourceTransactionManagerAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
+@EnableDynamoDBRepositories(mappingContextRef = "dynamoDBMappingContext", includeFilters = {
+		@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {UserRepository.class})})
 @Configuration
 @Import({DynamoDBConfig.class})
 public class Application {
@@ -42,14 +52,12 @@ public class Application {
 	private static final Logger log = LoggerFactory.getLogger(Application.class);
 
 	public static void main(String[] args) {
-		new SpringApplicationBuilder(Application.class)
-				.profiles("rest")
-				.web(WebApplicationType.SERVLET)
-				.run(args);
+		new SpringApplicationBuilder(Application.class).profiles("rest").web(WebApplicationType.SERVLET).run(args);
 	}
 
 	@Bean
-	public CommandLineRunner rest(ConfigurableApplicationContext ctx, UserRepository dynamoDBRepository, AmazonDynamoDB amazonDynamoDB, DynamoDBMapper dynamoDBMapper, DynamoDBMapperConfig config) {
+	public CommandLineRunner rest(ConfigurableApplicationContext ctx, UserRepository dynamoDBRepository,
+			AmazonDynamoDB amazonDynamoDB, DynamoDBMapper dynamoDBMapper, DynamoDBMapperConfig config) {
 		return (args) -> {
 
 			checkOrCreateTable(amazonDynamoDB, dynamoDBMapper, config, Device.class);
@@ -65,7 +73,6 @@ public class Application {
 		};
 	}
 
-
 	private void createEntities(UserRepository dynamoDBRepository) {
 		// save a couple of devices
 		dynamoDBRepository.save(new User("me", "me"));
@@ -75,8 +82,8 @@ public class Application {
 		log.info("Users found with findAll():");
 		log.info("-------------------------------");
 		for (User user : dynamoDBRepository.findAll()) {
-            log.info(user.toString());
-        }
+			log.info(user.toString());
+		}
 		log.info("");
 
 	}

@@ -1,3 +1,18 @@
+/**
+ * Copyright © 2018 spring-data-dynamodb-example (https://github.com/derjust/spring-data-dynamodb-examples)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.github.derjust.spring_data_dynamodb_examples.multirepo;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -24,16 +39,10 @@ import java.util.Optional;
 import static com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig.checkOrCreateTable;
 
 @SpringBootApplication
-@EnableJpaRepositories(
-		includeFilters = {@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
-				CustomerRepository.class}
-		)}
-)
-@EnableDynamoDBRepositories(
-		includeFilters = {@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
-				DeviceRepository.class}
-		)}
-)
+@EnableJpaRepositories(includeFilters = {
+		@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {CustomerRepository.class})})
+@EnableDynamoDBRepositories(includeFilters = {
+		@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {DeviceRepository.class})})
 @Configuration
 @Import(DynamoDBConfig.class)
 public class Application {
@@ -41,13 +50,13 @@ public class Application {
 	private static final Logger log = LoggerFactory.getLogger(Application.class);
 
 	public static void main(String[] args) {
-		new SpringApplicationBuilder(Application.class)
-				.profiles("multirepo")
-				.run(args);
+		new SpringApplicationBuilder(Application.class).profiles("multirepo").run(args);
 	}
 
 	@Bean
-	public CommandLineRunner multirepo(ConfigurableApplicationContext ctx, CustomerRepository jpaRepository, DeviceRepository dynamoDBRepository, AmazonDynamoDB amazonDynamoDB, DynamoDBMapper dynamoDBMapper, DynamoDBMapperConfig config) {
+	public CommandLineRunner multirepo(ConfigurableApplicationContext ctx, CustomerRepository jpaRepository,
+			DeviceRepository dynamoDBRepository, AmazonDynamoDB amazonDynamoDB, DynamoDBMapper dynamoDBMapper,
+			DynamoDBMapperConfig config) {
 		return (args) -> {
 			demoJPA(jpaRepository);
 
@@ -59,7 +68,6 @@ public class Application {
 		};
 	}
 
-
 	private void demoDynamoDB(DeviceRepository dynamoDBRepository) {
 		// save a couple of devices
 		dynamoDBRepository.save(new Device(1L, "Product A", "A", new Date()));
@@ -70,8 +78,8 @@ public class Application {
 		log.info("Devices found with findAll():");
 		log.info("-------------------------------");
 		for (Device device : dynamoDBRepository.findAll()) {
-            log.info(device.toString());
-        }
+			log.info(device.toString());
+		}
 		log.info("");
 
 	}
@@ -88,8 +96,8 @@ public class Application {
 		log.info("Customers found with findAll():");
 		log.info("-------------------------------");
 		for (Customer customer : jpaRepository.findAll()) {
-            log.info(customer.toString());
-        }
+			log.info(customer.toString());
+		}
 		log.info("");
 
 		// fetch an individual customer by ID
@@ -103,8 +111,8 @@ public class Application {
 		log.info("Customer found with findByLastName('Bauer'):");
 		log.info("--------------------------------------------");
 		for (Customer bauer : jpaRepository.findByLastName("Bauer")) {
-            log.info(bauer.toString());
-        }
+			log.info(bauer.toString());
+		}
 		log.info("");
 	}
 

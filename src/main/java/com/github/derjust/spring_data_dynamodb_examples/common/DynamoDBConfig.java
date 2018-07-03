@@ -1,3 +1,18 @@
+/**
+ * Copyright © 2018 spring-data-dynamodb-example (https://github.com/derjust/spring-data-dynamodb-examples)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.github.derjust.spring_data_dynamodb_examples.common;
 
 import com.amazonaws.auth.AWSCredentials;
@@ -27,85 +42,83 @@ import java.util.List;
 
 @Configuration
 public class DynamoDBConfig {
-    private static final Logger log = LoggerFactory.getLogger(DynamoDBConfig.class);
+	private static final Logger log = LoggerFactory.getLogger(DynamoDBConfig.class);
 
-    @Value("${amazon.aws.accesskey}")
-    private String amazonAWSAccessKey;
+	@Value("${amazon.aws.accesskey}")
+	private String amazonAWSAccessKey;
 
-    @Value("${amazon.aws.secretkey}")
-    private String amazonAWSSecretKey;
-    
-    public AWSCredentialsProvider amazonAWSCredentialsProvider() {
-        return new AWSStaticCredentialsProvider(amazonAWSCredentials());
-    }
+	@Value("${amazon.aws.secretkey}")
+	private String amazonAWSSecretKey;
 
-    @Bean
-    public AWSCredentials amazonAWSCredentials() {
-        return new BasicAWSCredentials(amazonAWSAccessKey, amazonAWSSecretKey);
-    }
+	public AWSCredentialsProvider amazonAWSCredentialsProvider() {
+		return new AWSStaticCredentialsProvider(amazonAWSCredentials());
+	}
 
-    @Bean
-    public DynamoDBMapperConfig dynamoDBMapperConfig() {
-        return DynamoDBMapperConfig.DEFAULT;
-    }
+	@Bean
+	public AWSCredentials amazonAWSCredentials() {
+		return new BasicAWSCredentials(amazonAWSAccessKey, amazonAWSSecretKey);
+	}
 
-    @Bean
-    public DynamoDBMapper dynamoDBMapper(AmazonDynamoDB amazonDynamoDB, DynamoDBMapperConfig config) {
-        return new DynamoDBMapper(amazonDynamoDB, config);
-    }
+	@Bean
+	public DynamoDBMapperConfig dynamoDBMapperConfig() {
+		return DynamoDBMapperConfig.DEFAULT;
+	}
 
-    @Bean
-    public AmazonDynamoDB amazonDynamoDB() {
-        return AmazonDynamoDBClientBuilder.standard()
-                .withCredentials(amazonAWSCredentialsProvider())
-                .withRegion(Regions.US_EAST_1)
-                .build();
-    }
+	@Bean
+	public DynamoDBMapper dynamoDBMapper(AmazonDynamoDB amazonDynamoDB, DynamoDBMapperConfig config) {
+		return new DynamoDBMapper(amazonDynamoDB, config);
+	}
 
-    @Bean
-    @Profile("rest")
-    public DynamoDBMappingContext dynamoDBMappingContext() {
-        return new DynamoDBMappingContext();
-    }
+	@Bean
+	public AmazonDynamoDB amazonDynamoDB() {
+		return AmazonDynamoDBClientBuilder.standard().withCredentials(amazonAWSCredentialsProvider())
+				.withRegion(Regions.US_EAST_1).build();
+	}
 
-    @Bean
-    @Profile("multirepo")
-    public MySQLShutdownApplicationListener mySQLShutdownApplicationListener() {
-        return new MySQLShutdownApplicationListener();
-    }
+	@Bean
+	@Profile("rest")
+	public DynamoDBMappingContext dynamoDBMappingContext() {
+		return new DynamoDBMappingContext();
+	}
 
+	@Bean
+	@Profile("multirepo")
+	public MySQLShutdownApplicationListener mySQLShutdownApplicationListener() {
+		return new MySQLShutdownApplicationListener();
+	}
 
-    public static void checkOrCreateTable(AmazonDynamoDB amazonDynamoDB, DynamoDBMapper mapper, DynamoDBMapperConfig config, Class<?> entityClass) {
-        String tableName = entityClass.getAnnotation(DynamoDBTable.class).tableName();
-        try {
-            amazonDynamoDB.describeTable(tableName);
+	public static void checkOrCreateTable(AmazonDynamoDB amazonDynamoDB, DynamoDBMapper mapper,
+			DynamoDBMapperConfig config, Class<?> entityClass) {
+		String tableName = entityClass.getAnnotation(DynamoDBTable.class).tableName();
+		try {
+			amazonDynamoDB.describeTable(tableName);
 
-            log.info("Table {} found", tableName);
-            return;
-        } catch (ResourceNotFoundException rnfe) {
-            log.warn("Table {} doesn't exist - Creating", tableName);
-        }
+			log.info("Table {} found", tableName);
+			return;
+		} catch (ResourceNotFoundException rnfe) {
+			log.warn("Table {} doesn't exist - Creating", tableName);
+		}
 
-        CreateTableRequest ctr = mapper.generateCreateTableRequest(entityClass, config);
-        ProvisionedThroughput pt = new ProvisionedThroughput(1L, 1L);
-        ctr.withProvisionedThroughput(pt);
-        List<GlobalSecondaryIndex> gsi = ctr.getGlobalSecondaryIndexes();
-        if (gsi != null) {
-            gsi.forEach(aGsi -> aGsi.withProvisionedThroughput(pt));
-        }
+		CreateTableRequest ctr = mapper.generateCreateTableRequest(entityClass, config);
+		ProvisionedThroughput pt = new ProvisionedThroughput(1L, 1L);
+		ctr.withProvisionedThroughput(pt);
+		List<GlobalSecondaryIndex> gsi = ctr.getGlobalSecondaryIndexes();
+		if (gsi != null) {
+			gsi.forEach(aGsi -> aGsi.withProvisionedThroughput(pt));
+		}
 
-        amazonDynamoDB.createTable(ctr);
-        waitForDynamoDBTable(amazonDynamoDB, tableName);
-    }
+		amazonDynamoDB.createTable(ctr);
+		waitForDynamoDBTable(amazonDynamoDB, tableName);
+	}
 
-    public static void waitForDynamoDBTable(AmazonDynamoDB amazonDynamoDB, String tableName) {
-        do {
-            try {
-                Thread.sleep(5 * 1000L);
-            } catch (InterruptedException e) {
-                throw new RuntimeException("Couldn't wait detect table " + tableName);
-            }
-        }
-        while (!amazonDynamoDB.describeTable(tableName).getTable().getTableStatus().equals(TableStatus.ACTIVE.name()));
-    }
+	public static void waitForDynamoDBTable(AmazonDynamoDB amazonDynamoDB, String tableName) {
+		do {
+			try {
+				Thread.sleep(5 * 1000L);
+			} catch (InterruptedException e) {
+				throw new RuntimeException("Couldn't wait detect table " + tableName);
+			}
+		} while (!amazonDynamoDB.describeTable(tableName).getTable().getTableStatus()
+				.equals(TableStatus.ACTIVE.name()));
+	}
 }

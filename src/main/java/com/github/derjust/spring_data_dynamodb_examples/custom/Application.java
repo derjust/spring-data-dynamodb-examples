@@ -1,3 +1,18 @@
+/**
+ * Copyright © 2018 spring-data-dynamodb-example (https://github.com/derjust/spring-data-dynamodb-examples)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.github.derjust.spring_data_dynamodb_examples.custom;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -28,68 +43,63 @@ import java.util.Random;
 import static com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig.checkOrCreateTable;
 
 @SpringBootApplication
-@EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class, //No JPA
-        DataSourceTransactionManagerAutoConfiguration.class,
-        HibernateJpaAutoConfiguration.class})
-@EnableDynamoDBRepositories(
-        includeFilters = {@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
-                UserRepository.class}
-        )}
-)
+@EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class, // No JPA
+		DataSourceTransactionManagerAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
+@EnableDynamoDBRepositories(includeFilters = {
+		@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {UserRepository.class})})
 @Configuration
 @Import(DynamoDBConfig.class)
 public class Application {
 
-    private static final Logger log = LoggerFactory.getLogger(Application.class);
+	private static final Logger log = LoggerFactory.getLogger(Application.class);
 
-    public static void main(String[] args) {
-        new SpringApplicationBuilder(Application.class)
-                .profiles("custom")
-                .run(args);
-    }
+	public static void main(String[] args) {
+		new SpringApplicationBuilder(Application.class).profiles("custom").run(args);
+	}
 
-    @Bean
-    public CommandLineRunner custom(ConfigurableApplicationContext ctx, UserRepository userRepository, AmazonDynamoDB amazonDynamoDB, DynamoDBMapper dynamoDBMapper, DynamoDBMapperConfig config) {
-        return (args) -> {
-            checkOrCreateTable(amazonDynamoDB, dynamoDBMapper, config, User.class);
+	@Bean
+	public CommandLineRunner custom(ConfigurableApplicationContext ctx, UserRepository userRepository,
+			AmazonDynamoDB amazonDynamoDB, DynamoDBMapper dynamoDBMapper, DynamoDBMapperConfig config) {
+		return (args) -> {
+			checkOrCreateTable(amazonDynamoDB, dynamoDBMapper, config, User.class);
 
-            demoCustomInterface(userRepository);
+			demoCustomInterface(userRepository);
 
-            ctx.close();
-        };
-    }
+			ctx.close();
+		};
+	}
 
-    private void demoCustomInterface(UserRepository userRepository) {
+	private void demoCustomInterface(UserRepository userRepository) {
 
-        // Create user & save it (creates Id)
-        User user = createUser();
-        userRepository.save(user);
+		// Create user & save it (creates Id)
+		User user = createUser();
+		userRepository.save(user);
 
-        log.info("Created user: {}", user);
+		log.info("Created user: {}", user);
 
-        // Call custom method on interface
-        userRepository.calculateAge(user);
-        log.info("Called custom method: {}", user);
+		// Call custom method on interface
+		userRepository.calculateAge(user);
+		log.info("Called custom method: {}", user);
 
-        // Reload instance to ensure custom method worked
-        Optional<User> reloadedUser = userRepository.findById(user.getId());
+		// Reload instance to ensure custom method worked
+		Optional<User> reloadedUser = userRepository.findById(user.getId());
 
-        assert reloadedUser.isPresent();
+		assert reloadedUser.isPresent();
 
-        log.info("Comparison - Old entity: {}", user);
-        log.info("Comparison - New entity: {}", reloadedUser.get());
-    }
+		log.info("Comparison - Old entity: {}", user);
+		log.info("Comparison - New entity: {}", reloadedUser.get());
+	}
 
-    private User createUser() {
-        User user = new User();
+	private User createUser() {
+		User user = new User();
 
-        user.setFirstname("Sebastian");
-        user.setLastname("Mueller");
+		user.setFirstname("Sebastian");
+		user.setLastname("Mueller");
 
-        Random r = new Random();
-        user.setBirthday(Instant.ofEpochMilli(r.nextInt()));
+		Random r = new Random();
+		user.setBirthday(Instant.ofEpochMilli(r.nextInt()));
 
-        return user;
-    }
+		return user;
+	}
 
 }
