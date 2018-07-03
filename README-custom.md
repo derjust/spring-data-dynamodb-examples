@@ -6,7 +6,6 @@ Further explanation can be found
 * in the [README-multirepo.md](README-custom.md)
 * as also the [code](src/main/java/com/github/derjust/spring_data_dynamodb_examples/custom)
 
-
 ### 📜 Code sample
 The repository interface is extend by an additional interface. It's implementation is found by the `Impl` suffix in the same package.
 *Spring Data* itself takes care of weaving in the implementation at runtime:
