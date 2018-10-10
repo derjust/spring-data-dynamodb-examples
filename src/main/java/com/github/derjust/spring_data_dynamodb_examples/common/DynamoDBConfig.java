@@ -42,7 +42,6 @@ import java.util.List;
 
 @Configuration
 public class DynamoDBConfig {
-	private static final Logger log = LoggerFactory.getLogger(DynamoDBConfig.class);
 
 	@Value("${amazon.aws.accesskey}")
 	private String amazonAWSAccessKey;
@@ -85,40 +84,5 @@ public class DynamoDBConfig {
 	@Profile("multirepo")
 	public MySQLShutdownApplicationListener mySQLShutdownApplicationListener() {
 		return new MySQLShutdownApplicationListener();
-	}
-
-	public static void checkOrCreateTable(AmazonDynamoDB amazonDynamoDB, DynamoDBMapper mapper,
-			DynamoDBMapperConfig config, Class<?> entityClass) {
-		String tableName = entityClass.getAnnotation(DynamoDBTable.class).tableName();
-		try {
-			amazonDynamoDB.describeTable(tableName);
-
-			log.info("Table {} found", tableName);
-			return;
-		} catch (ResourceNotFoundException rnfe) {
-			log.warn("Table {} doesn't exist - Creating", tableName);
-		}
-
-		CreateTableRequest ctr = mapper.generateCreateTableRequest(entityClass, config);
-		ProvisionedThroughput pt = new ProvisionedThroughput(1L, 1L);
-		ctr.withProvisionedThroughput(pt);
-		List<GlobalSecondaryIndex> gsi = ctr.getGlobalSecondaryIndexes();
-		if (gsi != null) {
-			gsi.forEach(aGsi -> aGsi.withProvisionedThroughput(pt));
-		}
-
-		amazonDynamoDB.createTable(ctr);
-		waitForDynamoDBTable(amazonDynamoDB, tableName);
-	}
-
-	public static void waitForDynamoDBTable(AmazonDynamoDB amazonDynamoDB, String tableName) {
-		do {
-			try {
-				Thread.sleep(5 * 1000L);
-			} catch (InterruptedException e) {
-				throw new RuntimeException("Couldn't wait detect table " + tableName);
-			}
-		} while (!amazonDynamoDB.describeTable(tableName).getTable().getTableStatus()
-				.equals(TableStatus.ACTIVE.name()));
 	}
 }

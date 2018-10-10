@@ -5,7 +5,6 @@ This example shows how to use multiple *Spring Data* repository types to access 
 In this example `DynamoDB` and `MySQL` is used.
 
 Further explanation can be found 
-* in the [README-multirepo.md](README-multirepo.md)
 * as also the [code](src/main/java/com/github/derjust/spring_data_dynamodb_examples/multirepo)
 
 

@@ -8,6 +8,8 @@ target
 pom.xml.releaseBackup
 release.properties
 
+src/main/resources/application.properties
+
 # Package Files #
 *.jar
 *.war

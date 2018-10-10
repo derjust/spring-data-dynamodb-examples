@@ -3,7 +3,6 @@
 This example shows how to use custom methods as part of *Spring Data* repository interfaces to implement custom logic.
 
 Further explanation can be found 
-* in the [README-multirepo.md](README-custom.md)
 * as also the [code](src/main/java/com/github/derjust/spring_data_dynamodb_examples/custom)
 
 ### 📜 Code sample

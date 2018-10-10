@@ -18,6 +18,8 @@ package com.github.derjust.spring_data_dynamodb_examples.rest;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import com.amazonaws.services.dynamodbv2.util.TableUtils;
 import com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig;
 import com.github.derjust.spring_data_dynamodb_examples.multirepo.Device;
 import org.slf4j.Logger;
@@ -33,18 +35,14 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
-
-import static com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig.checkOrCreateTable;
 
 @SpringBootApplication
 @EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class, // No JPA
 		DataSourceTransactionManagerAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
-@EnableDynamoDBRepositories(mappingContextRef = "dynamoDBMappingContext", includeFilters = {
-		@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {UserRepository.class})})
+@EnableDynamoDBRepositories(mappingContextRef = "dynamoDBMappingContext", 
+	basePackageClasses = UserRepository.class)
 @Configuration
 @Import({DynamoDBConfig.class})
 public class Application {
@@ -60,8 +58,9 @@ public class Application {
 			AmazonDynamoDB amazonDynamoDB, DynamoDBMapper dynamoDBMapper, DynamoDBMapperConfig config) {
 		return (args) -> {
 
-			checkOrCreateTable(amazonDynamoDB, dynamoDBMapper, config, Device.class);
-
+			TableUtils.createTableIfNotExists(amazonDynamoDB,dynamoDBMapper.generateCreateTableRequest(User.class)
+					.withProvisionedThroughput(new ProvisionedThroughput(1L, 1L)));
+			
 			createEntities(dynamoDBRepository);
 
 			log.info("");

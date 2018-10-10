@@ -18,7 +18,11 @@ package com.github.derjust.spring_data_dynamodb_examples.multirepo;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import com.amazonaws.services.dynamodbv2.util.TableUtils;
 import com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig;
+import com.github.derjust.spring_data_dynamodb_examples.custom.User;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -35,8 +39,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import java.util.Date;
 import java.util.Optional;
-
-import static com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig.checkOrCreateTable;
 
 @SpringBootApplication
 @EnableJpaRepositories(includeFilters = {
@@ -60,8 +62,9 @@ public class Application {
 		return (args) -> {
 			demoJPA(jpaRepository);
 
-			checkOrCreateTable(amazonDynamoDB, dynamoDBMapper, config, Device.class);
-
+			TableUtils.createTableIfNotExists(amazonDynamoDB,dynamoDBMapper.generateCreateTableRequest(Device.class)
+					.withProvisionedThroughput(new ProvisionedThroughput(1L, 1L)));
+			
 			demoDynamoDB(dynamoDBRepository);
 
 			ctx.close();
