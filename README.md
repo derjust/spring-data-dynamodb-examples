@@ -6,6 +6,14 @@ Please also check the [📖 Wiki](https://github.com/derjust/spring-data-dynamod
 
 The following examples exist and how they can be executed
 
+## 🚀 Simple Repository
+
+This example show the most basic usage also referenced by the [README.md](https://github.com/derjust/spring-data-dynamodb/) of the main project.
+
+Further explanation can be found 
+* in the [README-simple.md](README-simple.md)
+* as also the [code](src/main/java/com/github/derjust/spring_data_dynamodb_examples/simple)
+
 ## 📗 Multi Repository
 
 This example shows how to use multiple *Spring Data* repository types to access different storage backend. 
