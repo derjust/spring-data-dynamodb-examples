@@ -15,12 +15,10 @@
  */
 package com.github.derjust.spring_data_dynamodb_examples.custom;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
-import com.amazonaws.services.dynamodbv2.util.TableUtils;
-import com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig;
+import java.time.Instant;
+import java.util.Optional;
+import java.util.Random;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -36,9 +34,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import java.time.Instant;
-import java.util.Optional;
-import java.util.Random;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
+import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import com.amazonaws.services.dynamodbv2.util.TableUtils;
+import com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig;
 
 @SpringBootApplication
 @EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class, // No JPA
@@ -58,8 +60,10 @@ public class Application {
 	public CommandLineRunner custom(ConfigurableApplicationContext ctx, UserRepository userRepository,
 			AmazonDynamoDB amazonDynamoDB, DynamoDBMapper dynamoDBMapper, DynamoDBMapperConfig config) {
 		return (args) -> {
-			TableUtils.createTableIfNotExists(amazonDynamoDB,dynamoDBMapper.generateCreateTableRequest(User.class)
-					.withProvisionedThroughput(new ProvisionedThroughput(1L, 1L)));
+			CreateTableRequest ctr = dynamoDBMapper.generateCreateTableRequest(User.class)
+					.withProvisionedThroughput(new ProvisionedThroughput(1L, 1L));
+			TableUtils.createTableIfNotExists(amazonDynamoDB, ctr);
+			TableUtils.waitUntilActive(amazonDynamoDB, ctr.getTableName());
 
 			demoCustomInterface(userRepository);
 

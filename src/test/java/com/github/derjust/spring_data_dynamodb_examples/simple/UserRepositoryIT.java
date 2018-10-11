@@ -30,9 +30,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.FilterType;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.amazonaws.auth.AWSCredentials;
@@ -52,7 +50,7 @@ import com.amazonaws.services.dynamodbv2.util.TableUtils;
 import static org.hamcrest.Matchers.*;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = { PropertyPlaceholderAutoConfiguration.class, UserRepositoryIT.DynamoDBConfig.class })
+@SpringBootTest(classes = {PropertyPlaceholderAutoConfiguration.class, UserRepositoryIT.DynamoDBConfig.class})
 public class UserRepositoryIT {
 	private static final Logger log = LoggerFactory.getLogger(UserRepositoryIT.class);
 
@@ -91,7 +89,7 @@ public class UserRepositoryIT {
 					.withRegion(Regions.US_EAST_1).build();
 		}
 	}
-	
+
 	@Autowired
 	private UserRepository repository;
 

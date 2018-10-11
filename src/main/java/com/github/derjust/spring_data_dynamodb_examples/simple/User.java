@@ -86,7 +86,7 @@ public class User {
 		if (getClass() != obj.getClass())
 			return false;
 		User other = (User) obj;
-		return Arrays.deepEquals(new Object[]{firstName, id, lastName}, 
+		return Arrays.deepEquals(new Object[]{firstName, id, lastName},
 				new Object[]{other.firstName, other.id, other.lastName});
 	}
 

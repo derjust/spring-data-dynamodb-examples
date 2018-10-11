@@ -15,13 +15,14 @@
  */
 package com.github.derjust.spring_data_dynamodb_examples.custom;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneId;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 
 @SuppressWarnings("unused") // This class is used as per
 							// https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.custom-implementations

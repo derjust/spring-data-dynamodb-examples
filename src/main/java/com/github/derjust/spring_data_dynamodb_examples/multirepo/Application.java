@@ -15,13 +15,8 @@
  */
 package com.github.derjust.spring_data_dynamodb_examples.multirepo;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
-import com.amazonaws.services.dynamodbv2.util.TableUtils;
-import com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig;
-import com.github.derjust.spring_data_dynamodb_examples.custom.User;
+import java.util.Date;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,8 +32,13 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
-import java.util.Date;
-import java.util.Optional;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
+import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import com.amazonaws.services.dynamodbv2.util.TableUtils;
+import com.github.derjust.spring_data_dynamodb_examples.common.DynamoDBConfig;
 
 @SpringBootApplication
 @EnableJpaRepositories(includeFilters = {
@@ -62,9 +62,12 @@ public class Application {
 		return (args) -> {
 			demoJPA(jpaRepository);
 
-			TableUtils.createTableIfNotExists(amazonDynamoDB,dynamoDBMapper.generateCreateTableRequest(Device.class)
-					.withProvisionedThroughput(new ProvisionedThroughput(1L, 1L)));
-			
+			CreateTableRequest ctr = dynamoDBMapper.generateCreateTableRequest(Device.class)
+					.withProvisionedThroughput(new ProvisionedThroughput(1L, 1L));
+			TableUtils.createTableIfNotExists(amazonDynamoDB, ctr);
+			TableUtils.waitUntilActive(amazonDynamoDB, ctr.getTableName());
+
+
 			demoDynamoDB(dynamoDBRepository);
 
 			ctx.close();

@@ -15,12 +15,13 @@
  */
 package com.github.derjust.spring_data_dynamodb_examples.common;
 
-import com.github.derjust.spring_data_dynamodb_examples.rest.Application;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.stereotype.Component;
+
+import com.github.derjust.spring_data_dynamodb_examples.rest.Application;
 
 @Component
 public class MySQLShutdownApplicationListener implements ApplicationListener<ContextClosedEvent> {

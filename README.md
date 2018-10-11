@@ -91,7 +91,7 @@ userRepository.calculateAge(user);
 This example shows how to use `spring-data-dynamodb` with `spring-data-rest` to automatically expose CRUD operations on DynamoDB entities via REST endpoints.
 
 Further explanation can be found 
-* in the [README-multirepo.md](README-rest.md)
+* in the [README-rest.md](README-rest.md)
 * as also the [code](src/main/java/com/github/derjust/spring_data_dynamodb_examples/rest)
 
 ### 📜 Code sample

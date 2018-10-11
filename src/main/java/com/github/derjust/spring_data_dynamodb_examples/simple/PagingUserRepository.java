@@ -22,9 +22,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 public interface PagingUserRepository extends PagingAndSortingRepository<User, String> {
-	  Page<User> findByLastName(String lastName, Pageable pageable);
-	  
-	  @EnableScan 
-	  @EnableScanCount
-	  Page<User> findAll(Pageable pageable);
-	}
+	Page<User> findByLastName(String lastName, Pageable pageable);
+
+	@EnableScan
+	@EnableScanCount
+	Page<User> findAll(Pageable pageable);
+}

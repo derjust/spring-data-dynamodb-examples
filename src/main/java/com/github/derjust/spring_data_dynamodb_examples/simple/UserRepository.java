@@ -22,5 +22,5 @@ import org.springframework.data.repository.CrudRepository;
 
 @EnableScan
 public interface UserRepository extends CrudRepository<User, String> {
-  List<User> findByLastName(String lastName);
+	List<User> findByLastName(String lastName);
 }
